@@ -5,31 +5,39 @@ import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Textarea } from './ui/textarea';
 
-// Define the tone type
-type ToneType = 'fun' | 'professional' | 'minimal' | 'adventurous';
-
-// Define the template interface
-interface MessageTemplate {
-  intros: string[];
-  closings: string[];
-}
+type ToneType = 'fun' | 'professional' | 'minimal';
+type HolidayType = 'none' | 'christmas' | 'newyear';
 
 interface MessageTemplates {
-  fun: MessageTemplate;
-  professional: MessageTemplate;
-  minimal: MessageTemplate;
-  adventurous: MessageTemplate;
+  tones: {
+    fun: {
+      intros: string[];
+      closings: string[];
+    };
+    professional: {
+      intros: string[];
+      closings: string[];
+    };
+    minimal: {
+      intros: string[];
+      closings: string[];
+    };
+  };
+  holidays: {
+    none: {
+      additions: string[];
+    };
+    christmas: {
+      additions: string[];
+    };
+    newyear: {
+      additions: string[];
+    };
+  };
 }
 
-const OutOfOfficeGenerator = () => {
-  const [name, setName] = useState('');
-  const [returnDate, setReturnDate] = useState('');
-  const [reason, setReason] = useState('');
-  const [contact, setContact] = useState('');
-  const [message, setMessage] = useState('');
-  const [tone, setTone] = useState<ToneType>('fun');
-
-  const messageTemplates: MessageTemplates = {
+const messageTemplates: MessageTemplates = {
+  tones: {
     fun: {
       intros: [
         "🌴 Gone fishin' (metaphorically)",
@@ -37,7 +45,6 @@ const OutOfOfficeGenerator = () => {
         "✈️ Embarking on a grand adventure",
         "🧘‍♀️ Finding my zen",
         "🌞 Soaking up vitamin D",
-        "📚 Taking a break to read that book I've been putting off",
         "🎮 Finally beating that video game boss",
         "🍕 On a quest for the perfect pizza"
       ],
@@ -71,38 +78,60 @@ const OutOfOfficeGenerator = () => {
         "Away notice"
       ],
       closings: [
-        "Thanks.",
         "Best regards.",
         "Regards.",
-        "Best."
-      ]
-    },
-    adventurous: {
-      intros: [
-        "🌎 Currently exploring uncharted territories",
-        "🏃‍♂️ Racing against time zones",
-        "🗺️ Lost in the wilderness (aka vacation)",
-        "🚀 Temporarily in orbit",
-        "🏔️ Conquering new heights"
-      ],
-      closings: [
-        "Will return once this adventure chapter is complete!",
-        "Signal might be weak where I'm headed, but my spirit is strong!",
-        "The journey continues, but I'll be back soon!",
-        "Currently off the grid, seeking the next big story!"
+        "Best.",
+        "Thank you."
       ]
     }
-  };
+  },
+  holidays: {
+    none: {
+      additions: [""]
+    },
+    christmas: {
+      additions: [
+        "🎄 Celebrating the holiday season",
+        "🎅 Spreading holiday cheer",
+        "⛄ Making winter memories",
+        "🎁 Enjoying festive celebrations",
+        "❄️ Taking time for holiday traditions"
+      ]
+    },
+    newyear: {
+      additions: [
+        "🎆 Welcoming the new year",
+        "🎊 Celebrating new beginnings",
+        "✨ Starting fresh in 2024",
+        "🎉 Ringing in the new year",
+        "🥂 Toasting to new possibilities"
+      ]
+    }
+  }
+};
+
+const OutOfOfficeGenerator = () => {
+  const [name, setName] = useState('');
+  const [returnDate, setReturnDate] = useState('');
+  const [reason, setReason] = useState('');
+  const [contact, setContact] = useState('');
+  const [message, setMessage] = useState('');
+  const [tone, setTone] = useState<ToneType>('fun');
+  const [holiday, setHoliday] = useState<HolidayType>('none');
 
   const generateMessage = () => {
-    const template = messageTemplates[tone];
-    const intro = template.intros[Math.floor(Math.random() * template.intros.length)];
-    const closing = template.closings[Math.floor(Math.random() * template.closings.length)];
+    const toneTemplate = messageTemplates.tones[tone];
+    const holidayAddition = messageTemplates.holidays[holiday].additions[
+      Math.floor(Math.random() * messageTemplates.holidays[holiday].additions.length)
+    ];
+    
+    const intro = toneTemplate.intros[Math.floor(Math.random() * toneTemplate.intros.length)];
+    const closing = toneTemplate.closings[Math.floor(Math.random() * toneTemplate.closings.length)];
     
     let newMessage = '';
     
     if (tone === 'minimal') {
-      newMessage = `${intro}.
+      newMessage = `${intro}${holidayAddition ? ` - ${holidayAddition}` : ''}.
 
 ${name ? `${name} is` : 'I am'} out of office${reason ? ` ${reason}` : ''} until ${returnDate || '[return date]'}.
 
@@ -110,7 +139,7 @@ ${contact ? `Urgent matters: ${contact}` : 'Urgent matters: [contact person]'}.
 
 ${closing}`;
     } else {
-      newMessage = `${intro}!
+      newMessage = `${intro}${holidayAddition ? ` - ${holidayAddition}` : ''}!
 
 ${name ? `${name} is` : 'I am'} currently out of office${reason ? ` ${reason}` : ''} and will return on ${returnDate || '[return date]'}.
 
@@ -135,22 +164,44 @@ ${contact ? `For urgent matters, please contact ${contact}.` : 'For urgent matte
         </h1>
 
         <div className="space-y-4">
-          <div className="grid grid-cols-2 gap-2">
-            {(Object.keys(messageTemplates) as ToneType[]).map((value) => (
-              <Button
-                key={value}
-                onClick={() => setTone(value)}
-                variant={tone === value ? 'default' : 'outline'}
-                className={`w-full ${tone === value ? 'text-white' : 'text-black'}`}
-              >
-                {{
-                  fun: '😊 Fun',
-                  professional: '👔 Professional',
-                  minimal: '📝 Minimal',
-                  adventurous: '🌎 Adventurous'
-                }[value]}
-              </Button>
-            ))}
+          <div>
+            <h2 className="text-black font-medium mb-2">Select Tone:</h2>
+            <div className="grid grid-cols-3 gap-2">
+              {Object.keys(messageTemplates.tones).map((value) => (
+                <Button
+                  key={value}
+                  onClick={() => setTone(value as ToneType)}
+                  variant={tone === value ? 'default' : 'outline'}
+                  className={`w-full ${tone === value ? 'text-white' : 'text-black'}`}
+                >
+                  {{
+                    fun: '😊 Fun',
+                    professional: '👔 Professional',
+                    minimal: '📝 Minimal'
+                  }[value]}
+                </Button>
+              ))}
+            </div>
+          </div>
+
+          <div>
+            <h2 className="text-black font-medium mb-2">Add Holiday Theme (Optional):</h2>
+            <div className="grid grid-cols-3 gap-2">
+              {Object.keys(messageTemplates.holidays).map((value) => (
+                <Button
+                  key={value}
+                  onClick={() => setHoliday(value as HolidayType)}
+                  variant={holiday === value ? 'default' : 'outline'}
+                  className={`w-full ${holiday === value ? 'text-white' : 'text-black'}`}
+                >
+                  {{
+                    none: '📅 None',
+                    christmas: '🎄 Christmas',
+                    newyear: '🎆 New Year'
+                  }[value]}
+                </Button>
+              ))}
+            </div>
           </div>
           
           <Input
