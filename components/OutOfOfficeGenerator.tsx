@@ -5,15 +5,31 @@ import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Textarea } from './ui/textarea';
 
+// Define the tone type
+type ToneType = 'fun' | 'professional' | 'minimal' | 'adventurous';
+
+// Define the template interface
+interface MessageTemplate {
+  intros: string[];
+  closings: string[];
+}
+
+interface MessageTemplates {
+  fun: MessageTemplate;
+  professional: MessageTemplate;
+  minimal: MessageTemplate;
+  adventurous: MessageTemplate;
+}
+
 const OutOfOfficeGenerator = () => {
   const [name, setName] = useState('');
   const [returnDate, setReturnDate] = useState('');
   const [reason, setReason] = useState('');
   const [contact, setContact] = useState('');
   const [message, setMessage] = useState('');
-  const [tone, setTone] = useState('fun');
+  const [tone, setTone] = useState<ToneType>('fun');
 
-  const messageTemplates = {
+  const messageTemplates: MessageTemplates = {
     fun: {
       intros: [
         "🌴 Gone fishin' (metaphorically)",
@@ -120,19 +136,19 @@ ${contact ? `For urgent matters, please contact ${contact}.` : 'For urgent matte
 
         <div className="space-y-4">
           <div className="grid grid-cols-2 gap-2">
-            {Object.entries({
-              fun: '😊 Fun',
-              professional: '👔 Professional',
-              minimal: '📝 Minimal',
-              adventurous: '🌎 Adventurous'
-            }).map(([value, label]) => (
+            {(Object.keys(messageTemplates) as ToneType[]).map((value) => (
               <Button
                 key={value}
                 onClick={() => setTone(value)}
                 variant={tone === value ? 'default' : 'outline'}
                 className={`w-full ${tone === value ? 'text-white' : 'text-black'}`}
               >
-                {label}
+                {{
+                  fun: '😊 Fun',
+                  professional: '👔 Professional',
+                  minimal: '📝 Minimal',
+                  adventurous: '🌎 Adventurous'
+                }[value]}
               </Button>
             ))}
           </div>
